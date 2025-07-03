@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        nextflow-version: ["23.04.0", "24.04.4", "latest"]
+        nextflow-version: ["25.04.6", "latest"]
 
     steps:
       - name: Checkout code
