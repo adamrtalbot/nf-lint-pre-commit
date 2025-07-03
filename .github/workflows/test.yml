@@ -67,9 +67,11 @@ jobs:
               
               script:
               """
-              echo "Missing output block"
+              echo ""
               """
           }
+
+          x = badProcess()
           EOF
 
       - name: Test hook with invalid file (should fail)
