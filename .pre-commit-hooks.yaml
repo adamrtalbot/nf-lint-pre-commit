@@ -3,7 +3,7 @@
   description: Run nextflow lint on Nextflow pipeline files
   entry: nextflow-lint-hook
   language: script
-  files: \.nf$
+  files: \.nf|.config$
   require_serial: true
   pass_filenames: false
   always_run: false

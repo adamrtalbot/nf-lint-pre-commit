@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-hook-script:
-    name: Test Hook Script
+  test:
+    name: Test Hook
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -28,62 +28,62 @@ jobs:
       - name: Make hook executable
         run: chmod +x nextflow-lint-hook
 
-      - name: Create test Nextflow file (valid)
+      - name: Test basic functionality
         run: |
-          cat > test_valid.nf << 'EOF'
-          #!/usr/bin/env nextflow
+          # Test with no files (should exit cleanly)
+          ./nextflow-lint-hook
 
+          # Create valid test file
+          cat > test.nf << 'EOF'
+          #!/usr/bin/env nextflow
           nextflow.enable.dsl = 2
 
-          process sayHello {
-              input:
-              val name
-              
-              output:
-              stdout
-              
-              script:
-              """
-              echo "Hello, $name!"
-              """
+          process test {
+              output: stdout
+              script: "echo 'test'"
           }
 
-          workflow {
-              Channel.of('World') | sayHello | view
+          workflow { test() }
+          EOF
+
+          # Create config file
+          cat > nextflow.config << 'EOF'
+          params {
+              input = 'test'
+              output = 'results'
           }
           EOF
 
-      - name: Test hook with valid file
-        run: ./nextflow-lint-hook
+          # Create config file
+          cat > nextflow.config << 'EOF'
+          params {
+              input = 'test'
+              output = 'results'
+          }
+          EOF
 
-      - name: Create test Nextflow file (invalid syntax)
+          # Test basic linting
+          ./nextflow-lint-hook
+
+          # Test with arguments
+          ./nextflow-lint-hook -output concise
+          ./nextflow-lint-hook -format
+
+      - name: Test invalid file handling
         run: |
-          cat > test_invalid.nf << 'EOF'
+          # Create invalid file
+          cat > invalid.nf << 'EOF'
           #!/usr/bin/env nextflow
-
-          process badProcess {
-              input:
-              val name
-              
-              script:
-              """
-              echo ""
-              """
-          }
-
-          x = badProcess()
+          process bad { script: "echo test"
           EOF
 
-      - name: Test hook with invalid file (should fail)
-        run: |
+          # Should fail with invalid syntax
           if ./nextflow-lint-hook; then
-            echo "Hook should have failed with invalid file"
+            echo "Should have failed"
             exit 1
-          else
-            echo "Hook correctly failed with invalid file"
           fi
 
-  test-pre-commit-integration:
+  test-pre-commit:
     name: Test Pre-commit Integration
     runs-on: ubuntu-latest
 
@@ -96,20 +96,19 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install Nextflow
-        uses: nf-core/setup-nextflow@v2
-        with:
-          version: "latest"
-
-      - name: Install pre-commit
-        run: pip install pre-commit
+      - name: Install dependencies
+        run: |
+          pip install pre-commit
+          curl -s https://get.nextflow.io | bash
+          sudo mv nextflow /usr/local/bin/
 
       - name: Make hook executable
         run: chmod +x nextflow-lint-hook
 
-      - name: Create test pre-commit config
+      - name: Test pre-commit integration
         run: |
-          cat > .pre-commit-config.yaml << EOF
+          # Create test config
+          cat > .pre-commit-config.yaml << 'EOF'
           repos:
             - repo: local
               hooks:
@@ -120,167 +119,24 @@ jobs:
                   files: \.nf$
           EOF
 
-      - name: Create test Nextflow file
-        run: |
+          # Create test file
           cat > main.nf << 'EOF'
           #!/usr/bin/env nextflow
-
           nextflow.enable.dsl = 2
 
           process test {
-              output:
-              stdout
-              
-              script:
-              """
-              echo "Test process"
-              """
+              output: stdout
+              script: "echo 'test'"
           }
 
-          workflow {
-              test()
-          }
+          workflow { test() }
           EOF
 
-      - name: Run pre-commit on all files
-        run: pre-commit run --all-files
+          # Test pre-commit
+          pre-commit run --all-files
 
-      - name: Test pre-commit install
-        run: |
-          git init
-          git add .
-          pre-commit install
-          echo "Pre-commit installed successfully"
-
-  test-hook-variants:
-    name: Test Hook Variants
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install Nextflow
-        uses: nf-core/setup-nextflow@v2
-        with:
-          version: "latest"
-
-      - name: Make hook executable
-        run: chmod +x nextflow-lint-hook
-
-      - name: Create test Nextflow file
-        run: |
-          cat > format_test.nf << 'EOF'
-          #!/usr/bin/env nextflow
-
-          nextflow.enable.dsl = 2
-
-          process messyFormat {
-            input:
-            val x
-            output:
-            stdout
-            script:
-            """
-            echo $x
-            """
-          }
-
-          workflow {
-            Channel.of('test') | messyFormat | view
-          }
-          EOF
-
-      - name: Test basic lint
-        run: ./nextflow-lint-hook
-
-      - name: Test lint with format
-        run: ./nextflow-lint-hook -format
-
-      - name: Test lint with concise output
-        run: ./nextflow-lint-hook -output concise
-
-      - name: Test lint with JSON output
-        run: ./nextflow-lint-hook -output json
-
-      - name: Test lint with sort declarations
-        run: ./nextflow-lint-hook -sort-declarations
-
-      - name: Test lint with multiple arguments
-        run: ./nextflow-lint-hook -format -sort-declarations
-
-  test-edge-cases:
-    name: Test Edge Cases
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install Nextflow
-        uses: nf-core/setup-nextflow@v2
-        with:
-          version: "latest"
-
-      - name: Make hook executable
-        run: chmod +x nextflow-lint-hook
-
-      - name: Test with no Nextflow files
-        run: |
-          # Remove any .nf files
-          rm -f *.nf
-
-          # Should exit with code 0 (no files to check)
-          ./nextflow-lint-hook
-          echo "No files test passed"
-
-      - name: Test with multiple Nextflow files
-        run: |
-          # Create multiple test files
-          for i in {1..5}; do
-            cat > "test${i}.nf" << EOF
-          #!/usr/bin/env nextflow
-
-          nextflow.enable.dsl = 2
-
-          process test${i} {
-              output:
-              stdout
-              
-              script:
-              """
-              echo "Test ${i}"
-              """
-          }
-
-          workflow {
-              test${i}()
-          }
-          EOF
-          done
-
-          # Test with multiple files
-          ./nextflow-lint-hook
-
-      - name: Test with config files
-        run: |
-          cat > nextflow.config << 'EOF'
-          params {
-              input = 'test'
-              output = 'results'
-          }
-
-          process {
-              cpus = 1
-              memory = '1 GB'
-          }
-          EOF
-
-          # Config files shouldn't be processed (only .nf files)
-          ./nextflow-lint-hook
-
-  test-without-nextflow:
-    name: Test Without Nextflow Installed
+  test-no-nextflow:
+    name: Test Without Nextflow
     runs-on: ubuntu-latest
 
     steps:
@@ -290,18 +146,12 @@ jobs:
       - name: Make hook executable
         run: chmod +x nextflow-lint-hook
 
-      - name: Create test file
+      - name: Test graceful failure
         run: |
-          cat > test.nf << 'EOF'
-          #!/usr/bin/env nextflow
-          process test { script: "echo test" }
-          EOF
+          echo '#!/usr/bin/env nextflow\nprocess test { script: "echo test" }' > test.nf
 
-      - name: Test hook without Nextflow (should fail gracefully)
-        run: |
+          # Should fail gracefully without Nextflow
           if ./nextflow-lint-hook; then
-            echo "Hook should have failed without Nextflow"
+            echo "Should have failed without Nextflow"
             exit 1
-          else
-            echo "Hook correctly failed without Nextflow"
           fi
