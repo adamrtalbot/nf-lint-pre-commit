@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Nextflow
+        uses: nf-core/setup-nextflow@v2
+        with:
+          version: "latest"
+
+      - name: Run tests before release
+        run: |
+          chmod +x nextflow-lint-hook
+
+          # Create a simple test file
+          cat > release_test.nf << 'EOF'
+          #!/usr/bin/env nextflow
+
+          nextflow.enable.dsl = 2
+
+          process test {
+              output:
+              stdout
+              
+              script:
+              """
+              echo "Release test"
+              """
+          }
+
+          workflow {
+              test()
+          }
+          EOF
+
+          # Test the hook
+          ./nextflow-lint-hook
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            ## Nextflow Lint Pre-commit Hook Release
+
+            ### What's Included
+            - `nextflow-lint-hook` - The main hook script
+            - `.pre-commit-hooks.yaml` - Hook configuration
+
+            ### Usage
+            Add this to your `.pre-commit-config.yaml`:
+
+            ```yaml
+            repos:
+              - repo: https://github.com/adamrtalbot/nf-lint-pre-commit
+                rev: ${{ github.ref_name }}
+                hooks:
+                  - id: nextflow-lint
+            ```
+
+            ### Requirements
+            - Nextflow must be installed and available in PATH
+            - pre-commit framework
+
+            See the README for full documentation.
+          draft: false
+          prerelease: false

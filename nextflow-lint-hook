@@ -1,0 +1,31 @@
+#!/bin/bash
+set -e
+
+# Check if nextflow is installed
+if ! command -v nextflow &> /dev/null; then
+    echo "Error: nextflow is not installed or not in PATH"
+    echo "Please install nextflow from https://www.nextflow.io/"
+    exit 1
+fi
+
+# Find all Nextflow files in the current directory and subdirectories
+NF_FILES=$(find . -name "*.nf" -type f | grep -v '\.git' | grep -v '\.nextflow' | head -20)
+
+# Check if there are any Nextflow files
+if [ -z "$NF_FILES" ]; then
+    echo "No Nextflow files found to lint"
+    exit 0
+fi
+
+echo "Running nextflow lint on:"
+echo "$NF_FILES"
+echo ""
+
+# Run nextflow lint on all found files
+if nextflow lint $NF_FILES; then
+    echo "✅ Nextflow lint passed"
+    exit 0
+else
+    echo "❌ Nextflow lint failed"
+    exit 1
+fi 
