@@ -17,9 +17,6 @@ if [ -z "$NF_FILES" ]; then
     exit 0
 fi
 
-echo "Running nextflow lint on: $NF_FILES"
-[ $# -gt 0 ] && echo "With arguments: $*"
-
 # Run nextflow lint with any provided arguments
 if nextflow lint "$@" $NF_FILES; then
     echo "✅ Nextflow lint passed"
