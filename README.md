@@ -33,7 +33,7 @@ pre-commit install
 
 ## Usage
 
-Once installed, the hook will automatically run `nextflow lint` whenever you commit changes to `.nf` files in your repository.
+Once installed, the hook will automatically run `nextflow lint` whenever you commit changes to `.nf` or `.config` files in your repository.
 
 ### Manual Execution
 
@@ -76,65 +76,14 @@ repos:
         args: [-output, json]
 ```
 
-### Configuration
-
-The hook is configured to:
-- Run on files matching `*.nf` (Nextflow script files)
-- Run serially (not in parallel) to avoid conflicts
-- Check the entire repository context rather than individual files
-
-## What Does It Check?
-
-The `nextflow lint` command performs various checks on your Nextflow pipeline, including:
-- Syntax validation
-- Best practice compliance
-- Common anti-patterns
-- Configuration issues
-
 For detailed information about what `nextflow lint` checks, refer to the [Nextflow documentation](https://www.nextflow.io/docs/latest/reference/cli.html#lint).
-
-## Development and Testing
-
-This project includes comprehensive testing through GitHub Actions.
-
-### GitHub Actions CI/CD
-
-The repository includes automated workflows that test the hook thoroughly:
-
-- **`.github/workflows/test.yml`** - Comprehensive testing across multiple scenarios:
-  - Tests on Ubuntu and macOS
-  - Multiple Nextflow versions (23.04.0, 24.04.4, latest)
-  - Pre-commit framework integration
-  - Edge cases and error handling
-  
-- **`.github/workflows/release.yml`** - Automated releases when tags are pushed
-
-### Running Tests Locally
-
-You can test the hook directly during development:
-
-```bash
-# Install Nextflow (if not already installed)
-curl -s https://get.nextflow.io | bash
-
-# Test the hook directly
-chmod +x nextflow-lint-hook
-./nextflow-lint-hook
-
-# Test with arguments
-./nextflow-lint-hook -format
-./nextflow-lint-hook -output concise
-
-# Test with pre-commit
-pip install pre-commit
-pre-commit run --all-files
-```
 
 ## Troubleshooting
 
 ### Nextflow Not Found
 
 If you get an error that nextflow is not found:
+
 1. Make sure Nextflow is installed: `curl -s https://get.nextflow.io | bash`
 2. Make sure it's in your PATH: `export PATH="$PATH:/path/to/nextflow"`
 3. Verify installation: `nextflow -version`
@@ -142,6 +91,7 @@ If you get an error that nextflow is not found:
 ### Hook Fails
 
 If the lint check fails:
+
 1. Review the output to understand what issues were found
 2. Fix the issues in your Nextflow files
 3. Commit again
@@ -166,25 +116,29 @@ Contributions are welcome! Please:
 
 ### Development Workflow
 
+Please feel free to contribute to this project by opening an issue or a pull request.
+
+### Running Tests Locally
+
+You can test the hook directly during development:
+
 ```bash
-# Clone the repository
-git clone https://github.com/adamrtalbot/nf-lint-pre-commit
-cd nf-lint-pre-commit
+# Install Nextflow (if not already installed)
+curl -s https://get.nextflow.io | bash
 
-# Make changes to the hook
-vim nextflow-lint-hook
-
-# Test your changes locally
+# Test the hook directly
 chmod +x nextflow-lint-hook
 ./nextflow-lint-hook
 
-# Test with real pre-commit (optional)
-pre-commit try-repo . nextflow-lint --all-files
+# Test with arguments
+./nextflow-lint-hook -format
+./nextflow-lint-hook -output concise
 
-# Push changes - CI will run automatically
-git push origin your-feature-branch
+# Test with pre-commit
+pip install pre-commit
+pre-commit run --all-files
 ```
 
 ## License
 
-This project is licensed under the MIT License. 
+This project is licensed under the MIT License.
