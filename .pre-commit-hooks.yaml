@@ -6,5 +6,4 @@
   files: \.nf$
   require_serial: true
   pass_filenames: false
-  always_run: false 
-  args: ["--output", "concise"]
+  always_run: false

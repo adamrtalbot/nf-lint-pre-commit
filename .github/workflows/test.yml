@@ -192,21 +192,20 @@ jobs:
       - name: Test basic lint
         run: ./nextflow-lint-hook
 
-      - name: Test lint with format (should modify files)
-        run: |
-          # Copy original for comparison
-          cp format_test.nf format_test_original.nf
-
-          # Run with format option
-          ./nextflow-lint-hook --format || true
-
-          echo "Format test completed"
+      - name: Test lint with format
+        run: ./nextflow-lint-hook -format
 
       - name: Test lint with concise output
-        run: ./nextflow-lint-hook --output concise
+        run: ./nextflow-lint-hook -output concise
+
+      - name: Test lint with JSON output
+        run: ./nextflow-lint-hook -output json
 
       - name: Test lint with sort declarations
-        run: ./nextflow-lint-hook --sort-declarations
+        run: ./nextflow-lint-hook -sort-declarations
+
+      - name: Test lint with multiple arguments
+        run: ./nextflow-lint-hook -format -sort-declarations
 
   test-edge-cases:
     name: Test Edge Cases

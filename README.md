@@ -47,6 +47,35 @@ pre-commit run nextflow-lint --all-files
 pre-commit run nextflow-lint --files main.nf
 ```
 
+### Passing Arguments to Nextflow Lint
+
+You can pass any `nextflow lint` arguments through the hook by adding them to your `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/adamrtalbot/nf-lint-pre-commit
+    rev: v0.1.0
+    hooks:
+      - id: nextflow-lint
+        # Basic linting with no arguments (default)
+      
+      # Or with formatting
+      - id: nextflow-lint
+        args: [-format]
+        
+      # Or with concise output
+      - id: nextflow-lint
+        args: [-output, concise]
+        
+      # Or with multiple options
+      - id: nextflow-lint
+        args: [-format, -sort-declarations]
+        
+      # Or with JSON output for CI systems
+      - id: nextflow-lint
+        args: [-output, json]
+```
+
 ### Configuration
 
 The hook is configured to:
@@ -91,6 +120,10 @@ curl -s https://get.nextflow.io | bash
 # Test the hook directly
 chmod +x nextflow-lint-hook
 ./nextflow-lint-hook
+
+# Test with arguments
+./nextflow-lint-hook -format
+./nextflow-lint-hook -output concise
 
 # Test with pre-commit
 pip install pre-commit

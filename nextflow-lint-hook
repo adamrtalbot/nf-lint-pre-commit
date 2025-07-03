@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Store all arguments to pass to nextflow lint
+NEXTFLOW_LINT_ARGS="$*"
+
 # Check if nextflow is installed
 if ! command -v nextflow &> /dev/null; then
     echo "Error: nextflow is not installed or not in PATH"
@@ -19,10 +22,19 @@ fi
 
 echo "Running nextflow lint on:"
 echo "$NF_FILES"
+if [ -n "$NEXTFLOW_LINT_ARGS" ]; then
+    echo "With arguments: $NEXTFLOW_LINT_ARGS"
+fi
 echo ""
 
-# Run nextflow lint on all found files
-if nextflow lint $NF_FILES; then
+# Run nextflow lint with any provided arguments
+if [ -n "$NEXTFLOW_LINT_ARGS" ]; then
+    LINT_CMD="nextflow lint $NEXTFLOW_LINT_ARGS $NF_FILES"
+else
+    LINT_CMD="nextflow lint $NF_FILES"
+fi
+
+if eval "$LINT_CMD"; then
     echo "✅ Nextflow lint passed"
     exit 0
 else
